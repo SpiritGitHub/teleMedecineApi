@@ -5,14 +5,14 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.0</version>
+		<version>3.3.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.sp</groupId>
-	<artifactId>Medecine</artifactId>
+	<artifactId>telemedecine</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Medecine</name>
-	<description>Demo project for Spring Boot</description>
+	<name>telemedecine</name>
+	<description>telemedecine project for Spring Boot</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -63,7 +63,6 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-api</artifactId>
