@@ -1,19 +1,16 @@
 package com.sp.telemedecine.controller;
 
-import com.sp.telemedecine.dto.AuthResponse;
-import com.sp.telemedecine.dto.SignupRequest;
-import com.sp.telemedecine.dto.SinginRequest;
+import com.sp.telemedecine.dto.*;
 import com.sp.telemedecine.models.User;
+import com.sp.telemedecine.services.Auth.AuthServiceImpl;
 import com.sp.telemedecine.services.Auth.IAuthService;
 import com.sp.telemedecine.services.Autre.ErrorResponse;
 import com.sp.telemedecine.services.Autre.GlobalExceptionHandler;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth/")
@@ -21,6 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final IAuthService authService;
+
+    @Autowired
+    private AuthServiceImpl authServiceImpl;
 
     @PostMapping("signup-patient")
     public ResponseEntity<?> signupPatient(@RequestBody SignupRequest signUpRequest) {
@@ -67,5 +67,21 @@ public class AuthController {
     private ResponseEntity<ErrorResponse> handleGenericException(Exception e) {
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "An error occurred during signup");
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @PostMapping("/confirm")
+    public ResponseEntity<Boolean> confirmUser(@RequestBody ConfirmationRequest request) {
+        System.out.println("Received userId: " + request.getUserId() + ", confirmationCode: " + request.getConfirmationCode());
+        return ResponseEntity.ok(authServiceImpl.confirmUser(request.getUserId(), request.getConfirmationCode()));
+    }
+
+    @PostMapping("/password-change/initiate")
+    public void initiatePasswordChange(@RequestParam String email) {
+        authServiceImpl.initiatePasswordChange(email);
+    }
+
+    @PostMapping("/password-change/confirm")
+    public boolean confirmPasswordChange(@RequestBody PasswordChangeRequest passwordChangeRequest) {
+        return authServiceImpl.confirmPasswordChange(passwordChangeRequest);
     }
 }

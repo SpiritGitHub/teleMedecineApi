@@ -1,19 +1,20 @@
 package com.sp.telemedecine.services.Auth;
 
-import com.sp.telemedecine.dto.AuthResponse;
-import com.sp.telemedecine.dto.RefreshTokenRequest;
-import com.sp.telemedecine.dto.SignupRequest;
-import com.sp.telemedecine.dto.SinginRequest;
+import com.sp.telemedecine.dto.*;
 import com.sp.telemedecine.models.Doctor;
 import com.sp.telemedecine.models.Patient;
 import com.sp.telemedecine.models.User;
 import com.sp.telemedecine.models.UserRole;
+import com.sp.telemedecine.services.emailService.ConfirmationCodeRepo;
 import com.sp.telemedecine.repository.DoctorRepo;
 import com.sp.telemedecine.repository.PatientRepo;
 import com.sp.telemedecine.repository.UserRepo;
 import com.sp.telemedecine.services.Autre.GlobalExceptionHandler;
+import com.sp.telemedecine.services.emailService.ConfirmationCodeGen;
+import com.sp.telemedecine.services.emailService.EmailService;
 import com.sp.telemedecine.services.utils.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,6 +27,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements IAuthService {
 
+    @Autowired
+    private ConfirmationCodeGen confirmationCodeGen;
+    @Autowired
+    private EmailService emailService;
+    @Autowired
+    private ConfirmationCodeRepo confirmationCodeRepo;
+
     private final UserRepo userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
@@ -33,25 +41,82 @@ public class AuthServiceImpl implements IAuthService {
     private final DoctorRepo medecinProfileRepository;
     private final AuthenticationManager authenticationManager;
 
-    @Override
     public User signupPatient(SignupRequest signupRequest) {
         validateSignupRequest(signupRequest);
         User user = createUser(signupRequest, UserRole.PATIENT);
+        String confirmationCode = confirmationCodeGen.generateConfirmationCode();
+
+        confirmationCodeRepo.storeConfirmationCode(user.getUserId(), confirmationCode);
+        emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
+
+        user.setActive(false);
+        userRepository.save(user);
+
         Patient patientProfile = new Patient();
         patientProfile.setUser(user);
         patientProfileRepository.save(patientProfile);
+
         return user;
     }
 
-    @Override
     public User signupMedecin(SignupRequest signupRequest) {
         validateSignupRequest(signupRequest);
         User user = createUser(signupRequest, UserRole.DOCTOR);
+        String confirmationCode = confirmationCodeGen.generateConfirmationCode();
+
+        confirmationCodeRepo.storeConfirmationCode(user.getUserId(), confirmationCode);
+        emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
+
+        user.setActive(false);
+        userRepository.save(user);
+
         Doctor medecinProfile = new Doctor();
         medecinProfile.setUser(user);
         medecinProfileRepository.save(medecinProfile);
+
         return user;
     }
+
+    public boolean confirmUser(Long userId, String confirmationCode) {
+        String storedCode = confirmationCodeRepo.retrieveConfirmationCode(userId);
+        if (storedCode != null && storedCode.equals(confirmationCode)) {
+            Optional<User> userOptional = userRepository.findById(userId);
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+                user.setActive(true);
+                userRepository.save(user);
+                confirmationCodeRepo.removeConfirmationCode(userId);
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public void initiatePasswordChange(String email) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            String confirmationCode = confirmationCodeGen.generateConfirmationCode();
+            confirmationCodeRepo.storeConfirmationCode(user.getUserId(), confirmationCode);
+            emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
+        }
+    }
+
+    public boolean confirmPasswordChange(PasswordChangeRequest passwordChangeRequest) {
+        Long userId = Long.parseLong(passwordChangeRequest.getUserId());
+        if (confirmUser(userId, passwordChangeRequest.getConfirmationCode())) {
+            Optional<User> userOptional = userRepository.findById(userId);
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+                user.setPassword(passwordEncoder.encode(passwordChangeRequest.getNewPassword()));
+                userRepository.save(user);
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     private void validateSignupRequest(SignupRequest signupRequest) {
         if (userRepository.existsByEmail(signupRequest.getEmail())) {

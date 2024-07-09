@@ -25,5 +25,4 @@ public class DoctorAvailability {
     @JoinColumn(name = "doctor_id")
     @JsonBackReference
     private Doctor doctor;
-
 }

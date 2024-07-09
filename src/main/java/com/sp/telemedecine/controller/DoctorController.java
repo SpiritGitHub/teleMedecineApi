@@ -181,6 +181,7 @@ public class DoctorController {
         doctorService.deleteDoctor(id);
     }
 
+
 //    @GetMapping("/find-patient-username/{username}")
 //    public Optional<Patient> getPatientByUsername(@PathVariable String username) {
 //        return patientService.findByUsername(username);

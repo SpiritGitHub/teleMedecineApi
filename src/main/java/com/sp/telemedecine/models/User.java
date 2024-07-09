@@ -28,6 +28,8 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private UserRole userRole;
 
+    private boolean active;
+
     public Long getUserId() {
         return userId;
     }

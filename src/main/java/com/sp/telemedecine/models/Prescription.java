@@ -1,5 +1,6 @@
 package com.sp.telemedecine.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -21,8 +22,9 @@ public class Prescription {
     private LocalDate startDate;
     private LocalDate endDate;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "appointment_id")
+    @JsonBackReference("appointment-prescription")
     private Appointment appointment;
 
     @ManyToOne
@@ -34,10 +36,10 @@ public class Prescription {
     private Doctor doctor;
 
     public Patient getPatient() {
-        return this.appointment.getPatient();
+        return this.patient;
     }
 
     public Doctor getDoctor() {
-        return this.appointment.getDoctor();
+        return this.doctor;
     }
 }

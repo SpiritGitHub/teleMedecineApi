@@ -30,6 +30,7 @@ public class TelemedecineApplication implements CommandLineRunner {
 			user.setEmail("admin@spirit.com");
 			user.setUserRole(UserRole.ADMIN);
 			user.setPassword(new BCryptPasswordEncoder().encode("admin"));
+			user.setActive(true);
 			userRepository.save(user);
 		}
 	}

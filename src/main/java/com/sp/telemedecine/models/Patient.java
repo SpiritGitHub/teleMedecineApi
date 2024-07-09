@@ -1,5 +1,6 @@
 package com.sp.telemedecine.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -28,15 +29,9 @@ public class Patient {
     private String contactNumber;
     private String profilePictureUrl;
 
-    @OneToMany(mappedBy = "patient")
-    @JsonManagedReference
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL)
+    @JsonManagedReference("patient-appointment")
     private List<Appointment> appointments;
-
-//    @OneToMany(mappedBy = "patient")
-//    private List<Prescription> prescriptions;
-//
-//    @OneToMany(mappedBy = "patient")
-//    private List<TreatmentPlan> treatmentPlans;
 
     @OneToMany(mappedBy = "patient")
     private List<MedicalHistory> medicalHistories;

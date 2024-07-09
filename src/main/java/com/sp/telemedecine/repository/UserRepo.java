@@ -13,9 +13,7 @@ import java.util.Optional;
 public interface UserRepo extends JpaRepository<User, Long> {
 
     User findByUserRole(UserRole userRole);
-
     Optional<User> findByEmail(String email);
-
     boolean existsByUserRole(UserRole userRole);
     boolean existsByEmail(String email);
     boolean existsByPseudo(String pseudo);

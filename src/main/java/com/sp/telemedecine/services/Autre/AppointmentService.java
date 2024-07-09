@@ -141,7 +141,23 @@ public class AppointmentService {
             }).collect(Collectors.toList());
 
             if (!prescriptions.isEmpty()) {
-                prescriptionRepository.saveAll(prescriptions);
+                for (Prescription prescription : prescriptions) {
+                    Optional<Prescription> existingPrescription = prescriptionRepository.findByAppointmentAndMedication(appointment, prescription.getMedication());
+                    if (existingPrescription.isPresent()) {
+                        Prescription existing = existingPrescription.get();
+                        existing.setDosage(prescription.getDosage());
+                        existing.setFrequency(prescription.getFrequency());
+                        existing.setInstructions(prescription.getInstructions());
+                        prescriptionRepository.save(existing);
+                    } else {
+                        Optional<Prescription> duplicatePrescription = prescriptionRepository.findByAppointmentId(appointment.getId());
+                        if (duplicatePrescription.isPresent()) {
+                            throw new DuplicatePrescriptionException("Une prescription avec cet appointment_id existe déjà.");
+                        } else {
+                            prescriptionRepository.save(prescription);
+                        }
+                    }
+                }
             }
 
             appointment.setStatus(AppointmentStatus.COMPLETED);
@@ -150,6 +166,8 @@ public class AppointmentService {
             throw new EntityNotFoundException("Appointment not found");
         }
     }
+
+
 
 
 

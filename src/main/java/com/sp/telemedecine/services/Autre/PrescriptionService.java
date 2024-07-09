@@ -49,9 +49,9 @@ public class PrescriptionService {
         return prescriptionRepository.findByAppointment_Patient_Id(patientId);
     }
 
-    public List<Prescription> getPrescriptionsByAppointmentId(Long appointmentId) {
-        return prescriptionRepository.findByAppointmentId(appointmentId);
-    }
+//    public List<Prescription> getPrescriptionsByAppointmentId(Long appointmentId) {
+//        return prescriptionRepository.findByAppointmentId(appointmentId);
+//    }
 }
 
 

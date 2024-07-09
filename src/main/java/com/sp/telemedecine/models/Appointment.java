@@ -4,18 +4,15 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 @Entity
 @Table(name = "appointment")
 @Data
-@Setter
-@Getter
 public class Appointment {
 
     @Id
@@ -24,12 +21,12 @@ public class Appointment {
 
     @ManyToOne
     @JoinColumn(name = "patient_id", referencedColumnName = "id")
-    @JsonBackReference
+    @JsonBackReference("patient-appointment")
     private Patient patient;
 
     @ManyToOne
     @JoinColumn(name = "doctor_id", referencedColumnName = "id")
-    @JsonBackReference
+    @JsonBackReference("doctor-appointment")
     private Doctor doctor;
 
     private LocalDate appointmentDate;
@@ -38,11 +35,13 @@ public class Appointment {
     private String consultationType;
     private String reason;
 
-    @OneToOne(mappedBy = "appointment")
-    private Prescription prescription;
-
-    @OneToOne(mappedBy = "appointment")
+    @OneToOne(mappedBy = "appointment", cascade = CascadeType.ALL)
+    @JsonManagedReference("appointment-doctorNote")
     private DoctorNote doctorNote;
+
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL)
+    @JsonManagedReference("appointment-prescription")
+    private List<Prescription> prescriptions;
 
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status;
