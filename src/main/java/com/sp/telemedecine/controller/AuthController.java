@@ -23,9 +23,9 @@ public class AuthController {
     private AuthServiceImpl authServiceImpl;
 
     @PostMapping("signup-patient")
-    public ResponseEntity<?> signupPatient(@RequestBody SignupRequest signUpRequest) {
+    public ResponseEntity<?> signupPatient(@RequestBody SignupRequest signUpRequest, @RequestParam String notificationToken) {
         try {
-            User user = authService.signupPatient(signUpRequest);
+            User user = authService.signupPatient(signUpRequest, notificationToken);
             return ResponseEntity.ok(user);
         } catch (GlobalExceptionHandler.UserAlreadyExistsException |
                  GlobalExceptionHandler.PseudoAlreadyExistsException |
@@ -37,9 +37,9 @@ public class AuthController {
     }
 
     @PostMapping("signup-doctor")
-    public ResponseEntity<?> signupMedecin(@RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<?> signupMedecin(@RequestBody SignupRequest signupRequest, @RequestParam String notificationToken) {
         try {
-            User user = authService.signupMedecin(signupRequest);
+            User user = authService.signupMedecin(signupRequest, notificationToken);
             return ResponseEntity.ok(user);
         } catch (GlobalExceptionHandler.UserAlreadyExistsException |
                  GlobalExceptionHandler.PseudoAlreadyExistsException |

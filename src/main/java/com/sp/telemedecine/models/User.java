@@ -30,6 +30,8 @@ public class User implements UserDetails {
 
     private boolean active;
 
+    private String notificationToken;
+
     public Long getUserId() {
         return userId;
     }

@@ -28,6 +28,7 @@ public class Doctor {
     private String gender;
     private String address;
     private String contactNumber;
+    private String profileImageUrl;
 
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL)
     @JsonManagedReference("doctor-appointment")

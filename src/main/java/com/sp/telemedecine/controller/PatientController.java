@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -119,12 +120,12 @@ public class PatientController {
     }
 
     @PutMapping("/update-profil-patient/{id}")
-    public ResponseEntity<Patient> updatePatientDetails(@PathVariable Long id, @RequestBody Patient patientDetails) {
+    public ResponseEntity<Patient> updatePatient(@PathVariable Long userId, @RequestBody Patient patient, @RequestParam("profileImage") MultipartFile profileImage) {
         try {
-            Patient updatedPatient = patientService.updatePatient(id, patientDetails);
-            return new ResponseEntity<>(updatedPatient, HttpStatus.OK);
-        } catch (EntityNotFoundException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            Patient updatedPatient = patientService.updatePatient(userId, patient, profileImage);
+            return ResponseEntity.ok(updatedPatient);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
         }
     }
 ////////////////////////////////////////////////MedicalHistory//////////////////////////////////////

@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+echo "src/main/resources/telemedecine-e8edb-firebase-adminsdk-nto7j-a7dfa649f0.json" >> .gitignore
+
+/src/main/resources/telemedecine-e8edb-firebase-adminsdk-nto7j-a7dfa649f0.json

@@ -8,8 +8,8 @@ import com.sp.telemedecine.models.User;
 import java.util.Optional;
 
 public interface IAuthService {
-    User signupPatient(SignupRequest signupRequest);
-    User signupMedecin(SignupRequest signupRequest);
+    User signupPatient(SignupRequest signupRequest,  String notificationToken);
+    User signupMedecin(SignupRequest signupRequest,  String notificationToken);
     AuthResponse signin(SinginRequest signinRequest);
     Optional<User> findByEmail(String email);
 }

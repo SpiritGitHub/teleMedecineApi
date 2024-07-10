@@ -41,8 +41,22 @@ public class AuthServiceImpl implements IAuthService {
     private final DoctorRepo medecinProfileRepository;
     private final AuthenticationManager authenticationManager;
 
-    public User signupPatient(SignupRequest signupRequest) {
+    public User signupPatient(SignupRequest signupRequest, String notificationToken) {
         validateSignupRequest(signupRequest);
+
+        Optional<User> existingUserOpt = userRepository.findByEmail(signupRequest.getEmail());
+        if (existingUserOpt.isPresent()) {
+            User existingUser = existingUserOpt.get();
+            if (!existingUser.isActive()) {
+                String confirmationCode = confirmationCodeGen.generateConfirmationCode();
+                confirmationCodeRepo.storeConfirmationCode(existingUser.getUserId(), confirmationCode);
+                emailService.sendConfirmationEmail(existingUser.getEmail(), confirmationCode);
+                return existingUser;
+            } else {
+                throw new RuntimeException("Email already in use");
+            }
+        }
+
         User user = createUser(signupRequest, UserRole.PATIENT);
         String confirmationCode = confirmationCodeGen.generateConfirmationCode();
 
@@ -50,6 +64,7 @@ public class AuthServiceImpl implements IAuthService {
         emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
 
         user.setActive(false);
+        user.setNotificationToken(notificationToken);
         userRepository.save(user);
 
         Patient patientProfile = new Patient();
@@ -59,8 +74,22 @@ public class AuthServiceImpl implements IAuthService {
         return user;
     }
 
-    public User signupMedecin(SignupRequest signupRequest) {
+    public User signupMedecin(SignupRequest signupRequest, String notificationToken) {
         validateSignupRequest(signupRequest);
+
+        Optional<User> existingUserOpt = userRepository.findByEmail(signupRequest.getEmail());
+        if (existingUserOpt.isPresent()) {
+            User existingUser = existingUserOpt.get();
+            if (!existingUser.isActive()) {
+                String confirmationCode = confirmationCodeGen.generateConfirmationCode();
+                confirmationCodeRepo.storeConfirmationCode(existingUser.getUserId(), confirmationCode);
+                emailService.sendConfirmationEmail(existingUser.getEmail(), confirmationCode);
+                return existingUser;
+            } else {
+                throw new RuntimeException("Email already in use");
+            }
+        }
+
         User user = createUser(signupRequest, UserRole.DOCTOR);
         String confirmationCode = confirmationCodeGen.generateConfirmationCode();
 
@@ -68,6 +97,7 @@ public class AuthServiceImpl implements IAuthService {
         emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
 
         user.setActive(false);
+        user.setNotificationToken(notificationToken);
         userRepository.save(user);
 
         Doctor medecinProfile = new Doctor();
@@ -76,6 +106,7 @@ public class AuthServiceImpl implements IAuthService {
 
         return user;
     }
+
 
     public boolean confirmUser(Long userId, String confirmationCode) {
         String storedCode = confirmationCodeRepo.retrieveConfirmationCode(userId);
