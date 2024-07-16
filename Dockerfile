@@ -1,13 +1,8 @@
-FROM maven:3.8.5-openjdk-17 AS build
+# Étape de construction : Utiliser une image de base Maven avec une version de Java 21
+FROM maven:3.8.6-openjdk-17 AS build
 
-# Installer OpenJDK 21
-RUN apt-get update && \
-    apt-get install -y wget && \
-    wget https://download.java.net/java/early_access/jdk21/25/GPL/openjdk-21-ea+25_linux-x64_bin.tar.gz && \
-    tar -xvf openjdk-21-ea+25_linux-x64_bin.tar.gz && \
-    mv jdk-21 /usr/local/ && \
-    update-alternatives --install /usr/bin/java java /usr/local/jdk-21/bin/java 1 && \
-    update-alternatives --set java /usr/local/jdk-21/bin/java
+# Ajouter un auteur (optionnel)
+LABEL maintainer="spiritsmieya@gmail.com"
 
 # Définir l'emplacement du dossier de travail à l'intérieur du conteneur
 WORKDIR /app
@@ -20,7 +15,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Étape de production : Utiliser une image OpenJDK 21 pour exécuter l'application
-FROM openjdk:21-ea-jdk-slim
+FROM eclipse-temurin:21-jdk
 
 # Définir l'emplacement du dossier de travail à l'intérieur du conteneur
 WORKDIR /app
