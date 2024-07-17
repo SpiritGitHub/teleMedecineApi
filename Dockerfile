@@ -7,6 +7,6 @@ RUN mvn clean package -DskipTests
 # Étape de déploiement
 FROM openjdk:21
 WORKDIR /app
-COPY --from=build teleMedecineApi.jar medecineapp.jar
+COPY --from=build /app/target/teleMedecineApi.jar medecineapp.jar
 EXPOSE 1900
 CMD ["java", "-jar", "medecineapp.jar"]
