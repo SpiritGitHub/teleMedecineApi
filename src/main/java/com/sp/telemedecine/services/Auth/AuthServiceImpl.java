@@ -20,6 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -47,7 +48,11 @@ public class AuthServiceImpl implements IAuthService {
         String confirmationCode = confirmationCodeGen.generateConfirmationCode();
 
         confirmationCodeRepo.storeConfirmationCode(user.getUserId(), confirmationCode);
-        emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
+        try {
+            emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         user.setActive(false);
         userRepository.save(user);
@@ -65,7 +70,11 @@ public class AuthServiceImpl implements IAuthService {
         String confirmationCode = confirmationCodeGen.generateConfirmationCode();
 
         confirmationCodeRepo.storeConfirmationCode(user.getUserId(), confirmationCode);
-        emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
+        try {
+            emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         user.setActive(false);
         userRepository.save(user);
@@ -76,6 +85,21 @@ public class AuthServiceImpl implements IAuthService {
 
         return user;
     }
+
+    public void initiatePasswordChange(String email) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            String confirmationCode = confirmationCodeGen.generateConfirmationCode();
+            confirmationCodeRepo.storeConfirmationCode(user.getUserId(), confirmationCode);
+            try {
+                emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
     public boolean confirmUser(Long userId, String confirmationCode) {
         String storedCode = confirmationCodeRepo.retrieveConfirmationCode(userId);
@@ -92,17 +116,6 @@ public class AuthServiceImpl implements IAuthService {
         return false;
     }
 
-
-    public void initiatePasswordChange(String email) {
-        Optional<User> userOptional = userRepository.findByEmail(email);
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            String confirmationCode = confirmationCodeGen.generateConfirmationCode();
-            confirmationCodeRepo.storeConfirmationCode(user.getUserId(), confirmationCode);
-            emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
-        }
-    }
-
     public boolean confirmPasswordChange(PasswordChangeRequest passwordChangeRequest) {
         Long userId = Long.parseLong(passwordChangeRequest.getUserId());
         if (confirmUser(userId, passwordChangeRequest.getConfirmationCode())) {
@@ -117,6 +130,19 @@ public class AuthServiceImpl implements IAuthService {
         return false;
     }
 
+    public void resendConfirmationCode(String email) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            String confirmationCode = confirmationCodeGen.generateConfirmationCode();
+            confirmationCodeRepo.storeConfirmationCode(user.getUserId(), confirmationCode);
+            try {
+                emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     private void validateSignupRequest(SignupRequest signupRequest) {
         if (userRepository.existsByEmail(signupRequest.getEmail())) {

@@ -80,6 +80,11 @@ public class AuthController {
         authServiceImpl.initiatePasswordChange(email);
     }
 
+    @PostMapping("resendCode")
+    public  void resendeconfirmationcode(@RequestParam String email){
+        authServiceImpl.resendConfirmationCode(email);
+    }
+
     @PostMapping("/password-change/confirm")
     public boolean confirmPasswordChange(@RequestBody PasswordChangeRequest passwordChangeRequest) {
         return authServiceImpl.confirmPasswordChange(passwordChangeRequest);
