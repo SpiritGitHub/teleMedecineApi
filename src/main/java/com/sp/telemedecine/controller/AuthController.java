@@ -23,9 +23,9 @@ public class AuthController {
     private AuthServiceImpl authServiceImpl;
 
     @PostMapping("signup-patient")
-    public ResponseEntity<?> signupPatient(@RequestBody SignupRequest signUpRequest, @RequestParam String notificationToken) {
+    public ResponseEntity<?> signupPatient(@RequestBody SignupRequest signUpRequest) {
         try {
-            User user = authService.signupPatient(signUpRequest, notificationToken);
+            User user = authService.signupPatient(signUpRequest);
             return ResponseEntity.ok(user);
         } catch (GlobalExceptionHandler.UserAlreadyExistsException |
                  GlobalExceptionHandler.PseudoAlreadyExistsException |
@@ -37,9 +37,9 @@ public class AuthController {
     }
 
     @PostMapping("signup-doctor")
-    public ResponseEntity<?> signupMedecin(@RequestBody SignupRequest signupRequest, @RequestParam String notificationToken) {
+    public ResponseEntity<?> signupMedecin(@RequestBody SignupRequest signupRequest) {
         try {
-            User user = authService.signupMedecin(signupRequest, notificationToken);
+            User user = authService.signupMedecin(signupRequest);
             return ResponseEntity.ok(user);
         } catch (GlobalExceptionHandler.UserAlreadyExistsException |
                  GlobalExceptionHandler.PseudoAlreadyExistsException |
@@ -78,6 +78,11 @@ public class AuthController {
     @PostMapping("/password-change/initiate")
     public void initiatePasswordChange(@RequestParam String email) {
         authServiceImpl.initiatePasswordChange(email);
+    }
+
+    @PostMapping("resendCode")
+    public  void resendeconfirmationcode(@RequestParam String email){
+        authServiceImpl.resendConfirmationCode(email);
     }
 
     @PostMapping("/password-change/confirm")

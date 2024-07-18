@@ -30,21 +30,24 @@ public class AppointmentService {
 
     @Autowired
     private AppointmentRepository appointmentRepository;
+
     @Autowired
     private DoctorNoteRepository doctorNoteRepository;
+
     @Autowired
     private PrescriptionRepository prescriptionRepository;
+
     @Autowired
     private DoctorAvailabilityRepository doctorAvailabilityRepository;
+
     @Autowired
     private DoctorAvailabilityService doctorAvailabilityService;
+
     @Autowired
     private PatientService patientService;
+
     @Autowired
     private DoctorService doctorService;
-    @Autowired
-    private NotificationService notificationService;
-
 
     @Transactional
     public ResponseEntity<String> bookAppointment(BookAppointmentRequest request) {
@@ -95,11 +98,8 @@ public class AppointmentService {
         appointment.setReason(request.getReason());
         appointment.setStatus(AppointmentStatus.SCHEDULED);
 
-        String notificationTitle = "New Appointment";
-        String notificationBody = "You have a new appointment with " + patient.getFirstName() + " " + patient.getLastName() + ".";
-
         appointmentRepository.save(appointment);
-        notificationService.sendNotification(doctor.getNotificationToken(), notificationTitle, notificationBody);
+
         return ResponseEntity.ok("Appointment booked successfully with ID: " + appointment.getId());
     }
 
@@ -130,7 +130,7 @@ public class AppointmentService {
                 doctorNoteRepository.save(doctorNote);
             }
 
-            List<Prescription> prescriptionsToAdd = request.getPrescriptions().stream().map(dto -> {
+            List<Prescription> prescriptions = request.getPrescriptions().stream().map(dto -> {
                 Prescription prescription = new Prescription();
                 prescription.setMedication(dto.getMedication());
                 prescription.setDosage(dto.getDosage());
@@ -140,8 +140,25 @@ public class AppointmentService {
                 return prescription;
             }).collect(Collectors.toList());
 
-            // Ajouter les nouvelles prescriptions à l'appointment sans vérifier si elles existent déjà
-            prescriptionsToAdd.forEach(prescription -> prescriptionRepository.save(prescription));
+            if (!prescriptions.isEmpty()) {
+                for (Prescription prescription : prescriptions) {
+                    Optional<Prescription> existingPrescription = prescriptionRepository.findByAppointmentAndMedication(appointment, prescription.getMedication());
+                    if (existingPrescription.isPresent()) {
+                        Prescription existing = existingPrescription.get();
+                        existing.setDosage(prescription.getDosage());
+                        existing.setFrequency(prescription.getFrequency());
+                        existing.setInstructions(prescription.getInstructions());
+                        prescriptionRepository.save(existing);
+                    } else {
+                        Optional<Prescription> duplicatePrescription = prescriptionRepository.findByAppointmentId(appointment.getId());
+                        if (duplicatePrescription.isPresent()) {
+                            throw new DuplicatePrescriptionException("Une prescription avec cet appointment_id existe déjà.");
+                        } else {
+                            prescriptionRepository.save(prescription);
+                        }
+                    }
+                }
+            }
 
             appointment.setStatus(AppointmentStatus.COMPLETED);
             return appointmentRepository.save(appointment);
@@ -149,6 +166,8 @@ public class AppointmentService {
             throw new EntityNotFoundException("Appointment not found");
         }
     }
+
+
 
 
 

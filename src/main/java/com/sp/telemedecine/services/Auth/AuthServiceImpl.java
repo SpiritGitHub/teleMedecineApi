@@ -20,6 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -41,30 +42,19 @@ public class AuthServiceImpl implements IAuthService {
     private final DoctorRepo medecinProfileRepository;
     private final AuthenticationManager authenticationManager;
 
-    public User signupPatient(SignupRequest signupRequest, String notificationToken) {
+    public User signupPatient(SignupRequest signupRequest) {
         validateSignupRequest(signupRequest);
-
-        Optional<User> existingUserOpt = userRepository.findByEmail(signupRequest.getEmail());
-        if (existingUserOpt.isPresent()) {
-            User existingUser = existingUserOpt.get();
-            if (!existingUser.isActive()) {
-                String confirmationCode = confirmationCodeGen.generateConfirmationCode();
-                confirmationCodeRepo.storeConfirmationCode(existingUser.getUserId(), confirmationCode);
-                emailService.sendConfirmationEmail(existingUser.getEmail(), confirmationCode);
-                return existingUser;
-            } else {
-                throw new RuntimeException("Email already in use");
-            }
-        }
-
         User user = createUser(signupRequest, UserRole.PATIENT);
         String confirmationCode = confirmationCodeGen.generateConfirmationCode();
 
         confirmationCodeRepo.storeConfirmationCode(user.getUserId(), confirmationCode);
-        emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
+        try {
+            emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         user.setActive(false);
-        user.setNotificationToken(notificationToken);
         userRepository.save(user);
 
         Patient patientProfile = new Patient();
@@ -74,30 +64,19 @@ public class AuthServiceImpl implements IAuthService {
         return user;
     }
 
-    public User signupMedecin(SignupRequest signupRequest, String notificationToken) {
+    public User signupMedecin(SignupRequest signupRequest) {
         validateSignupRequest(signupRequest);
-
-        Optional<User> existingUserOpt = userRepository.findByEmail(signupRequest.getEmail());
-        if (existingUserOpt.isPresent()) {
-            User existingUser = existingUserOpt.get();
-            if (!existingUser.isActive()) {
-                String confirmationCode = confirmationCodeGen.generateConfirmationCode();
-                confirmationCodeRepo.storeConfirmationCode(existingUser.getUserId(), confirmationCode);
-                emailService.sendConfirmationEmail(existingUser.getEmail(), confirmationCode);
-                return existingUser;
-            } else {
-                throw new RuntimeException("Email already in use");
-            }
-        }
-
         User user = createUser(signupRequest, UserRole.DOCTOR);
         String confirmationCode = confirmationCodeGen.generateConfirmationCode();
 
         confirmationCodeRepo.storeConfirmationCode(user.getUserId(), confirmationCode);
-        emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
+        try {
+            emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         user.setActive(false);
-        user.setNotificationToken(notificationToken);
         userRepository.save(user);
 
         Doctor medecinProfile = new Doctor();
@@ -105,6 +84,20 @@ public class AuthServiceImpl implements IAuthService {
         medecinProfileRepository.save(medecinProfile);
 
         return user;
+    }
+
+    public void initiatePasswordChange(String email) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            String confirmationCode = confirmationCodeGen.generateConfirmationCode();
+            confirmationCodeRepo.storeConfirmationCode(user.getUserId(), confirmationCode);
+            try {
+                emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
@@ -123,17 +116,6 @@ public class AuthServiceImpl implements IAuthService {
         return false;
     }
 
-
-    public void initiatePasswordChange(String email) {
-        Optional<User> userOptional = userRepository.findByEmail(email);
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            String confirmationCode = confirmationCodeGen.generateConfirmationCode();
-            confirmationCodeRepo.storeConfirmationCode(user.getUserId(), confirmationCode);
-            emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
-        }
-    }
-
     public boolean confirmPasswordChange(PasswordChangeRequest passwordChangeRequest) {
         Long userId = Long.parseLong(passwordChangeRequest.getUserId());
         if (confirmUser(userId, passwordChangeRequest.getConfirmationCode())) {
@@ -148,6 +130,19 @@ public class AuthServiceImpl implements IAuthService {
         return false;
     }
 
+    public void resendConfirmationCode(String email) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            String confirmationCode = confirmationCodeGen.generateConfirmationCode();
+            confirmationCodeRepo.storeConfirmationCode(user.getUserId(), confirmationCode);
+            try {
+                emailService.sendConfirmationEmail(user.getEmail(), confirmationCode);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     private void validateSignupRequest(SignupRequest signupRequest) {
         if (userRepository.existsByEmail(signupRequest.getEmail())) {
