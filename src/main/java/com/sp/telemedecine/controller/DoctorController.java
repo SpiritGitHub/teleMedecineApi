@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -167,14 +168,15 @@ public class DoctorController {
     }
 
     @PutMapping("/update-profil-doctor/{userId}")
-    public ResponseEntity<Doctor> updateDoctorProfile(@PathVariable Long userId, @RequestBody Doctor doctor) {
-        Doctor updatedDoctor = doctorService.updateDoctor(userId, doctor);
-        if (updatedDoctor != null) {
-            return new ResponseEntity<>(updatedDoctor, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<Doctor> updateDoctor(@PathVariable Long userId,
+                                               @RequestParam("specialization") String specialization,
+                                               @RequestParam("gender") String gender,
+                                               @RequestParam("address") String address,
+                                               @RequestParam("contactNumber") String contactNumber,
+                                               @RequestParam(value = "profilePicture", required = false) MultipartFile profilePicture) {
+        return doctorService.updateDoctor(userId, specialization, gender, address, contactNumber, profilePicture);
     }
+
 
     @DeleteMapping("delete-doctor/{id}")
     public void deleteDoctor(@PathVariable Long id) {

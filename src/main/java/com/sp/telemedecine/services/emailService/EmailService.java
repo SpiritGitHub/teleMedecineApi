@@ -32,7 +32,7 @@ public class EmailService {
 
         Personalization personalization = new Personalization();
         personalization.addTo(to);
-        personalization.setSubject(subject); // Define the subject here
+        personalization.setSubject(subject);
 
         for (Map.Entry<String, String> entry : templateData.entrySet()) {
             personalization.addDynamicTemplateData(entry.getKey(), entry.getValue());
@@ -52,7 +52,6 @@ public class EmailService {
             System.out.println("Response headers: " + response.getHeaders());
 
             if (response.getStatusCode() != 202) {
-                // Log detailed error information
                 System.err.println("Failed to send email. Status code: " + response.getStatusCode());
                 System.err.println("Response body: " + response.getBody());
                 System.err.println("Response headers: " + response.getHeaders());
@@ -64,7 +63,7 @@ public class EmailService {
     }
 
     public void sendConfirmationEmail(String toEmail, String confirmationCode) throws IOException {
-        String subject = "Your Confirmation Code";
+        String subject = "Your confirmation code";
         Map<String, String> templateData = new HashMap<>();
         templateData.put("confirmationCode", confirmationCode);
         sendTemplateEmail(toEmail, subject, templateData);

@@ -6,11 +6,14 @@ import com.sp.telemedecine.services.Auth.AuthServiceImpl;
 import com.sp.telemedecine.services.Auth.IAuthService;
 import com.sp.telemedecine.services.Autre.ErrorResponse;
 import com.sp.telemedecine.services.Autre.GlobalExceptionHandler;
+import com.sp.telemedecine.services.Autre.GoogleCloudStorageService;
+import io.jsonwebtoken.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/auth/")
@@ -21,6 +24,8 @@ public class AuthController {
 
     @Autowired
     private AuthServiceImpl authServiceImpl;
+    @Autowired
+    private GoogleCloudStorageService googleCloudStorageService;
 
     @PostMapping("signup-patient")
     public ResponseEntity<?> signupPatient(@RequestBody SignupRequest signUpRequest) {
@@ -88,5 +93,13 @@ public class AuthController {
     @PostMapping("/password-change/confirm")
     public boolean confirmPasswordChange(@RequestBody PasswordChangeRequest passwordChangeRequest) {
         return authServiceImpl.confirmPasswordChange(passwordChangeRequest);
+    }
+    @PostMapping("/upload")
+    public String uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("role") String role) {
+        try {
+            return googleCloudStorageService.uploadFile(file, role);
+        } catch (IOException | java.io.IOException e) {
+            return "Failed to upload file: " + e.getMessage();
+        }
     }
 }
