@@ -2,8 +2,10 @@ package com.sp.telemedecine.controller;
 
 import com.sp.telemedecine.dto.BookAppointmentRequest;
 import com.sp.telemedecine.dto.CancelAppointmentRequest;
+import com.sp.telemedecine.repository.PatientRepo;
 import com.sp.telemedecine.services.Autre.AppointmentService;
 //import com.sp.Medecine.services.Autre.MedicalHistoryService;
+import com.sp.telemedecine.services.Autre.GoogleCloudStorageService;
 import com.sp.telemedecine.services.Autre.PrescriptionService;
 import com.sp.telemedecine.services.Patient.PatientService;
 import com.sp.telemedecine.services.doctor.DoctorNoteService;
@@ -15,7 +17,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +36,12 @@ public class PatientController {
 
     @Autowired
     private AppointmentService appointmentService;
+
+    @Autowired
+    private PatientRepo patientRepository;
+
+    @Autowired
+    private GoogleCloudStorageService googleCloudStorageService;
 //
 //    @Autowired
 //    private MedicalHistoryService medicalHistoryService;
@@ -118,14 +129,16 @@ public class PatientController {
         return patientService.getPatientByUserId(userId);
     }
 
-    @PutMapping("/update-profil-patient/{id}")
-    public ResponseEntity<Patient> updatePatientDetails(@PathVariable Long id, @RequestBody Patient patientDetails) {
-        try {
-            Patient updatedPatient = patientService.updatePatient(id, patientDetails);
-            return new ResponseEntity<>(updatedPatient, HttpStatus.OK);
-        } catch (EntityNotFoundException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    @PutMapping("/update-profil-patient/{userId}")
+    public ResponseEntity<Patient> updatePatient(@PathVariable Long userId,
+                                                 @RequestParam("lastName") String lastName,
+                                                 @RequestParam("firstName") String firstName,
+                                                 @RequestParam("gender") String gender,
+                                                 @RequestParam("birthday") Date birthday,
+                                                 @RequestParam("address") String address,
+                                                 @RequestParam("contactNumber") String contactNumber,
+                                                 @RequestParam(value = "profilePicture", required = false) MultipartFile profilePicture) {
+        return patientService.updatePatient(userId, lastName, firstName, gender, birthday, address, contactNumber, profilePicture);
     }
 ////////////////////////////////////////////////MedicalHistory//////////////////////////////////////
 //    @GetMapping("/medical-hitory-patient/{patientId}")
