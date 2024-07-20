@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Base64;
 import java.util.UUID;
 
 @Service
@@ -20,13 +22,16 @@ public class GoogleCloudStorageService {
 
     public GoogleCloudStorageService(@Value("${google.cloud.project-id}") String projectId,
                                      @Value("${google.cloud.bucket-name}") String bucketName,
-                                     @Value("${google.application.credentials}") String credentialsPath) throws IOException {
+                                     @Value("${google.application.credentials}") String credentialsBase64) throws IOException {
         this.bucketName = bucketName;
 
-        try (FileInputStream serviceAccountStream = new FileInputStream(credentialsPath)) {
+        // Décoder la chaîne Base64
+        byte[] decodedCredentials = Base64.getDecoder().decode(credentialsBase64);
+
+        try (ByteArrayInputStream credentialsStream = new ByteArrayInputStream(decodedCredentials)) {
             this.storage = StorageOptions.newBuilder()
                     .setProjectId(projectId)
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccountStream))
+                    .setCredentials(GoogleCredentials.fromStream(credentialsStream))
                     .build()
                     .getService();
         }
